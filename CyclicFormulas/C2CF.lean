@@ -28,6 +28,10 @@ namespace C2CF
 instance coeGraph : Coe C2CF Graph := ⟨toGraph⟩
 instance coeType : CoeSort C2CF Type := ⟨(V .)⟩
 
+instance : Nonempty (G : C2CF) := ⟨G.vI⟩
+
+instance instFinEnumC2CF : FinEnum (G : C2CF) := ⟨Fintype.card G, G.count⟩
+
 end C2CF
 
 namespace C2CP
@@ -41,6 +45,7 @@ lemma final_lit {H : C2CP} : lit <| H.L H.vF := of_eq_true (congr_arg _ H.LΩf.1
 @[simp]
 lemma final_no_succ {H : C2CP} : ∀ x, ¬ H.E H.vF x :=
   H.lit_no_succ H.vF final_lit
+
 
 end C2CP
 

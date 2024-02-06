@@ -1,5 +1,5 @@
 -- variable (x y : Nat)
+-- def Test : (Fin n → α) → α
+-- | Matrix.vecCons _ _ => sorry
 
-let x : Nat := 1 in
-instance : Add Nat where
-  add := fun a b => x
+#check @Eq.subst

@@ -49,11 +49,22 @@ namespace Sum
     (Equiv.sumCongr A B).trans finSumFinEquiv
 
   def equivFinCardSum [Fintype α] [Fintype β]
-    (A : α ≃ Fin (Fintype.card α)) (B : β ≃ Fin (Fintype.card β)) :
+    (fa : α ≃ Fin (Fintype.card α)) (fb : β ≃ Fin (Fintype.card β)) :
       α ⊕ β ≃ Fin (Fintype.card (α ⊕ β)) :=
-    (equivFinSum A B).trans (finCongr Fintype.card_sum.symm)
+    (equivFinSum fa fb).trans (finCongr Fintype.card_sum.symm)
 
 end Sum
+
+namespace Sum3
+  open Sum
+
+  def equivFinCardSum3 [Fintype α] [Fintype β] [Fintype γ]
+    (fa : α ≃ Fin (Fintype.card α))
+    (fb : β ≃ Fin (Fintype.card β))
+    (fc : γ ≃ Fin (Fintype.card γ)) :
+      α ⊕ β ⊕ γ ≃ Fin (Fintype.card (α ⊕ β ⊕ γ)) :=
+    equivFinCardSum fa <| equivFinCardSum fb fc
+end Sum3
 
 def boolEquivFin : Bool ≃ Fin 2 :=
   (FinEnum.ofList [true, false] (by simp)).2
@@ -162,3 +173,5 @@ theorem contractDistinctEquivFin {α : Type} [A : Fintype α] [DecidableEq α] {
       (fun ⟨x, p⟩ => have h : x ≠ b := (Finset.mem_erase.mp p).left; by simp [h])
     ((contractDistinctEquiv hd).trans g).trans sorry
 
+theorem cardFinTypeEnum [Fintype α] [FinEnum α]
+  : FinEnum.card α = Fintype.card α := sorry

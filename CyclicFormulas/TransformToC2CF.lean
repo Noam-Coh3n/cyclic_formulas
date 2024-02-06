@@ -1,8 +1,12 @@
 import CyclicFormulas.Dual
 import CyclicFormulas.Formula
+import CyclicFormulas.Erase
 
 -- set_option pp.all false
-set_option pp.beta true
+-- set_option pp.beta true
+-- set_option pp.coercions false
+
+-- set_option maxHeartbeats 0
 
 open Sum
 open C2CP
@@ -116,43 +120,64 @@ def H_A (n : Nat) : C2CP where
 @[simp]
 def H_comp (Hα Hβ : C2CP) : C2CP := sorry
 
-@[simp]
-def H_union (Hα Hβ : C2CP) : C2CP :=
-  -- let r := Sum.elim_rel Eq (. = Hα.vF ∧ . = Hβ.vF) (. = Hβ.vF ∧ . = Hα.vF) Eq
-  -- let s : Setoid _ := ⟨r, ⟨(by aesop), (by aesop), (by aesop)⟩⟩
-  -- let dr : DecidableRel s.r := instDecidableElimRel
-  -- let r : Hα ⊕ Hβ → Hα ⊕ Hβ → Prop := contract (inl Hα.vF) (inr Hβ.vF)
-  let s : Setoid (Hα ⊕ Hβ) := contractSetoid (inl Hα.vF) (inr Hβ.vF)
-{
-  V := Fin 1 ⊕ Quotient s
 
-  E := Sum.elim_rel
-    ∅
-    (fun _ => Quot.lift (Sum.elim (Eq Hα.vI) (Eq Hβ.vI)) (by simp [i_ne_f]))
-    ∅
-    <| Quot.lift₂ (Sum.elim_rel Hα.E (Hα.E . Hα.vF ∧ . = Hβ.vF)
-                   (Hβ.E . Hβ.vF ∧ . = Hα.vF) Hβ.E) (by simp) (by aesop)
+def H_union (Hα Hβ : C2CP) : C2CP where
+  V := erase (in₂ Hβ.vF : Fin 1 ⊕ Hα ⊕ Hβ)
 
+  E
+  | ⟨in₀ _, _⟩, ⟨in₁ w, _⟩ => w = Hα.vI
+  | ⟨in₀ _, _⟩, ⟨in₂ w, _⟩ => w = Hβ.vI
+  | ⟨in₁ v, _⟩, ⟨in₁ w, _⟩ => Hα.E v w
+  | ⟨in₂ v, _⟩, ⟨in₂ w, _⟩ => Hβ.E v w
+  | ⟨in₂ v, _⟩, ⟨in₁ w, _⟩ => Hβ.E v Hβ.vF ∧ w = Hα.vF
+  | _, _ => False
 
-  L := Sum.elim (fun _ => .or) <| Quot.lift (Sum.elim Hα.L Hβ.L) (by simp)
+  E_dec
+  | ⟨in₀ _, _⟩, ⟨in₀ _, _⟩ => decidableFalse
+  | ⟨in₀ _, _⟩, ⟨in₁ w, _⟩ => decEq ..
+  | ⟨in₀ _, _⟩, ⟨in₂ w, _⟩ => decEq ..
+  | ⟨in₁ _, _⟩, ⟨in₀ _, _⟩ => decidableFalse
+  | ⟨in₁ v, _⟩, ⟨in₁ w, _⟩ => Hα.E_dec ..
+  | ⟨in₁ _, _⟩, ⟨in₂ _, _⟩ => decidableFalse
+  | ⟨in₂ _, _⟩, ⟨in₀ _, _⟩ => decidableFalse
+  | ⟨in₂ v, _⟩, ⟨in₁ w, _⟩ => @And.decidable (Hβ.E v Hβ.vF) (w = Hα.vF) (Hβ.E_dec v Hβ.vF) (decEq w Hα.vF)
+  | ⟨in₂ v, _⟩, ⟨in₂ w, _⟩ => Hβ.E_dec ..
 
-  Ω := Sum.elim (fun _ => .o) <| Quot.lift (Sum.elim Hα.Ω Hβ.Ω) (by simp)
+  L
+  | ⟨in₀ _, _⟩ => .or
+  | ⟨in₁ v, _⟩ => Hα.L v
+  | ⟨in₂ v, _⟩ => Hβ.L v
 
-  -- count := equivFinCardSum (Equiv.refl <| Fin 1) <| contractDistinctEquivFin inl_ne_inr <| equivFinCardSum Hα.count Hβ.count
+  Ω
+  | ⟨in₀ _, _⟩ => .o
+  | ⟨in₁ v, _⟩ => Hα.Ω v
+  | ⟨in₂ v, _⟩ => Hβ.Ω v
+
+  succ
+  | ⟨in₀ _, _⟩ => none
+  | ⟨in₁ v, _⟩ => (fun x => ⟨in₁ x, by simp⟩) <$> Hα.succ v
+  | ⟨in₂ v, _⟩ => match Hβ.succ v with
+    | none => none
+    | some w => dite (Hβ.vF ≠ w)
+      (some ⟨in₂ w, by simp [.]⟩)
+      (fun _ => some ⟨in₁ Hα.vF, by simp⟩)
+
+  vI := ⟨in₀ 0, inr_ne_inl⟩
+  vF := ⟨in₁ Hα.vF, by simp [in₂, in₁, ne_eq, inr.injEq, not_false_eq_true]⟩
+
   count := sorry
 
-  vI := inl 0
-  vF := inr ⟦inl Hα.vF⟧
-  LΩf := by simp [Quotient.mk]
+  -- count := Equiv.trans (@FinEnum.equiv (erase (in₂ Hβ.vF : Fin 1 ⊕ Hα ⊕ Hβ)) <| @FinEnum.Subtype.finEnum _ (FinEnum.ofEquiv _ (equivFinCardSum3 (Equiv.refl <| Fin 1) Hα.count Hβ.count)) (in₂ Hβ.vF ≠ .) _) (Equiv.cast (congr_arg Fin (@cardFinTypeEnum (erase _) instFintypeErase finEnumErase)))
 
-  -- succ := Sum.elim (fun _ => none) <| Quot.lift (Sum.elim (fun x => if x = Hα.vF then none else Hα.succ x)) _
-  lit_no_succ := sorry
-  prg_succ_unique := sorry
-  colouring := sorry
-}
+  -- count := (@eraseEquivFin (Fin 1 ⊕ Hα ⊕ Hβ) (in₂ Hβ.vF) (Fintype.card (erase (in₂ Hβ.vF))) _ (inl 0) (inl_ne_inr) (Equiv.trans (equivFinCardSum3 (Equiv.refl (Fin 1)) Hα.count Hβ.count) (Equiv.cast (congr_arg Fin _))))
+  -- count := equivFinCardSum3 (Equiv.refl <| Fin 1) (Hα.count) <|
+  --     (eraseEquivFin Hβ.i_ne_f
+  --       (Equiv.trans (Hβ.count) <| Equiv.cast
+  --         (congr_arg _ ((Nat.succ_pred Fintype.card_ne_zero).symm)))
+  --     ).trans <| Equiv.cast <| congr_arg Fin (by simp; rfl)trans <| Equiv.cast <| congr_arg Fin (by simp; rfl)
 
 
-@[simp]
+
 def H_star (Hα : C2CP) : C2CP where
   V := Fin 1 ⊕ Hα
 
@@ -249,15 +274,13 @@ def H_test (Gφ : C2CF) : C2CP where
   | .inr v => Gφ.colouring v
 
 mutual
-  @[simp]
   def ToC2CP : Program → C2CP
   | .atom n    => H_A n
   | .comp α β  => H_comp  (ToC2CP α) (ToC2CP β)
-  | .union α β => H_union (ToC2CP α) (ToC2CP β)
+  | .union α β => sorry -- H_union (ToC2CP α) (ToC2CP β)
   | .star α    => H_star  (ToC2CP α)
   | .test φ    => H_test  (ToC2CF φ)
 
-  @[simp]
   def ToC2CF : Formula → C2CF
   | .prop  n => G_p n
   | .nprop n => G_np n
