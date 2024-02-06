@@ -1,6 +1,4 @@
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Fintype.Sum
-import CyclicFormulas.sumLemmas
+import CyclicFormulas.myInstances
 
 @[ext]
 structure Graph where
@@ -70,25 +68,6 @@ section Walk
 
   end Walk
 end Walk
-
-section Connectivity
-  variable {G : Graph}
-
-  @[simp]
-  def reach : G → G → Prop := Relation.ReflTransGen G.E
-
-  @[simp]
-  def connect (x y : G) := reach x y ∧ reach y x
-
-  def connectedSetoid : Setoid G := ⟨connect, sorry⟩
-
-  def ConnectedComponent (G : Graph) := Quotient G.connectedSetoid
-
-  def connectedComponentMk (v : G) : ConnectedComponent G := .mk _ v
-
-  instance instDecRelConnect : DecidableRel (@connect G) := sorry
-
-end Connectivity
 
 
 

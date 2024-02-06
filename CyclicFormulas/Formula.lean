@@ -24,19 +24,6 @@ structure Model where
 
 instance : CoeSort Model Type := ⟨Model.S⟩
 
--- namespace Union
-
--- instance instUnionRelation {α β : Type _}: Union (α → β → Prop) where
---   union r s x y := r x y ∨ s x y
-
--- instance instUnionPredicate {α : Type _}: Union (α → Prop) where
---   union p q x := p x ∨ q x
-
--- instance instInterPredicate {α : Type _}: Inter (α → Prop) where
---   inter p q x := p x ∧ q x
-
--- end Union
-
 -- mutual
 --   -- Need s here, see https://github.com/leanprover/lean4/issues/2883 (bug)
 --   def rel {𝔐 : Model} : Program → 𝔐.S → 𝔐.S → Prop

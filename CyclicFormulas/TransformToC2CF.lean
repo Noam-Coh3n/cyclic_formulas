@@ -1,14 +1,6 @@
 import CyclicFormulas.Dual
 import CyclicFormulas.Formula
-import CyclicFormulas.Erase
 import Mathlib.Init.Data.Subtype.Basic
-import Mathlib.Logic.Unique
-
-
--- set_option pp.all false
--- set_option pp.beta true
--- set_option pp.coercions false
-
 
 open Sum
 open C2CP

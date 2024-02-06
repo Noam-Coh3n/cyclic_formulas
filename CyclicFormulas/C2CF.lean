@@ -1,4 +1,3 @@
-import Mathlib.Data.Fintype.Sum
 import CyclicFormulas.Graph
 import CyclicFormulas.Label
 
