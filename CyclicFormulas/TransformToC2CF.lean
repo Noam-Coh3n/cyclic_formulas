@@ -1,6 +1,9 @@
 import CyclicFormulas.Dual
 import CyclicFormulas.Formula
 import CyclicFormulas.Erase
+import Mathlib.Init.Data.Subtype.Basic
+import Mathlib.Logic.Unique
+
 
 -- set_option pp.all false
 -- set_option pp.beta true
@@ -12,33 +15,26 @@ open Sum
 open C2CP
 open C2CF
 
-@[simp]
 def G_p (n : Nat) : C2CF where
   V       := Fin 1
   E _ _   := False
   L _     := .prop n
   Ω _     := .o
   vI      := 0
-  count   := Equiv.refl _
 
   lit_no_succ _ _ _       := not_false
   succ _                  := none
   prg_succ_unique _ _ _   := False.elim
   colouring               := (forall_const _).mpr trivial
 
-  -- cycles_mono _
-  -- | .base a     => False.elim a
-  -- | .cons _ a _ => False.elim a
-
-@[simp]
 def G_np (n : Nat) : C2CF :=
   .dual (G_p n)
 
 open Sum3
 
-@[simp]
 def G_or (Gφ Gψ : C2CF) : C2CF where
   V := Fin 1 ⊕ Gφ ⊕ Gψ
+  V_fin := FinEnum.sum
 
   E
   | in₀ _, in₁ w => w = Gφ.vI
@@ -46,26 +42,6 @@ def G_or (Gφ Gψ : C2CF) : C2CF where
   | in₁ v, in₁ w => Gφ.E v w
   | in₂ v, in₂ w => Gψ.E v w
   | _, _         => False
-
-  L
-  | in₀ _ => Label.or
-  | in₁ x => Gφ.L x
-  | in₂ y => Gψ.L y
-
-  Ω
-  | in₀ _ => Colour.o
-  | in₁ x => Gφ.Ω x
-  | in₂ y => Gψ.Ω y
-
-  vI := in₀ 0
-
-  lit_no_succ := by
-    rintro (z | ⟨vl | vr⟩) p (z' | ⟨wl | wr⟩)
-    <;> simp_all
-    . apply Gφ.lit_no_succ vl p
-    . apply Gψ.lit_no_succ vr p
-
-  count := equivFinCardSum (Equiv.refl <| Fin 1) <| equivFinCardSum Gφ.count Gψ.count
 
   E_dec
   | in₀ _, in₁ _ => decEq ..
@@ -77,6 +53,24 @@ def G_or (Gφ Gψ : C2CF) : C2CF where
   | in₁ _, in₂ _ => isFalse not_false
   | in₂ _, in₀ _ => isFalse not_false
   | in₂ _, in₁ _ => isFalse not_false
+
+  L
+  | in₀ _ => Label.or
+  | in₁ x => Gφ.L x
+  | in₂ y => Gψ.L y
+
+  Ω
+  | in₀ _ => Colour.o
+  | in₁ x => Gφ.Ω x
+  | in₂ y => Gψ.Ω y
+
+  vI := inl default
+
+  lit_no_succ := by
+    rintro (z | ⟨vl | vr⟩) p (z' | ⟨wl | wr⟩)
+    <;> simp_all
+    . apply Gφ.lit_no_succ vl p
+    . apply Gψ.lit_no_succ vr p
 
   succ
   | in₀ _ => none
@@ -96,16 +90,12 @@ def G_or (Gφ Gψ : C2CF) : C2CF where
   | in₁ v => Gφ.colouring v
   | in₂ v => Gψ.colouring v
 
-@[simp]
 def G_and (Gφ Gψ : C2CF) : C2CF := .dual (G_or (.dual Gφ) (.dual Gψ))
 
-@[simp]
 def G_dim (Hα : C2CP) (Gφ : C2CF) : C2CF := sorry
 
-@[simp]
 def G_box (Hα : C2CP) (Gφ : C2CF) : C2CF := .dual (G_dim Hα (.dual Gφ))
 
-@[simp]
 def H_A (n : Nat) : C2CP where
   V := Bool
   E := (. && !.)
@@ -113,16 +103,21 @@ def H_A (n : Nat) : C2CP where
   Ω _ := .o
   vI := true
   vF := false
+  i_ne_f := Bool.noConfusion
+  LΩf := by simp only [cond_false, and_self]
 
-  count := boolEquivFin
+  colouring := by simp
   succ := (bif . then some false else none)
+  lit_no_succ := by simp
+  prg_succ_unique := by simp
 
-@[simp]
+
+
 def H_comp (Hα Hβ : C2CP) : C2CP := sorry
 
-
 def H_union (Hα Hβ : C2CP) : C2CP where
-  V := erase (in₂ Hβ.vF : Fin 1 ⊕ Hα ⊕ Hβ)
+  V := {x : Fin 1 ⊕ Hα ⊕ Hβ // x ≠ in₂ Hβ.vF}
+  V_fin := FinEnum.Subtype.finEnum (. ≠ in₂ Hβ.vF)
 
   E
   | ⟨in₀ _, _⟩, ⟨in₁ w, _⟩ => w = Hα.vI
@@ -158,28 +153,41 @@ def H_union (Hα Hβ : C2CP) : C2CP where
   | ⟨in₁ v, _⟩ => (fun x => ⟨in₁ x, by simp⟩) <$> Hα.succ v
   | ⟨in₂ v, _⟩ => match Hβ.succ v with
     | none => none
-    | some w => dite (Hβ.vF ≠ w)
+    | some w => dite (w ≠ Hβ.vF)
       (some ⟨in₂ w, by simp [.]⟩)
       (fun _ => some ⟨in₁ Hα.vF, by simp⟩)
 
-  vI := ⟨in₀ 0, inr_ne_inl⟩
+  vI := ⟨in₀ 0, inl_ne_inr⟩
   vF := ⟨in₁ Hα.vF, by simp [in₂, in₁, ne_eq, inr.injEq, not_false_eq_true]⟩
 
-  count := sorry
+  i_ne_f := @Subtype.ne_of_val_ne _ _ ⟨_, _⟩ _ inl_ne_inr
 
-  -- count := Equiv.trans (@FinEnum.equiv (erase (in₂ Hβ.vF : Fin 1 ⊕ Hα ⊕ Hβ)) <| @FinEnum.Subtype.finEnum _ (FinEnum.ofEquiv _ (equivFinCardSum3 (Equiv.refl <| Fin 1) Hα.count Hβ.count)) (in₂ Hβ.vF ≠ .) _) (Equiv.cast (congr_arg Fin (@cardFinTypeEnum (erase _) instFintypeErase finEnumErase)))
+  lit_no_succ
+  | ⟨in₁ v, _⟩, p, ⟨in₁ w, _⟩ => Hα.lit_no_succ v p w
+  | ⟨in₂ v, _⟩, p, ⟨in₂ w, _⟩ => Hβ.lit_no_succ v p w
+  | ⟨in₂ _, _⟩, p, ⟨in₁ _, _⟩ => not_and_of_not_left _ (Hβ.lit_no_succ _ p _)
+  | ⟨in₁ _, _⟩, _, ⟨in₀ _, _⟩ => not_false
+  | ⟨in₁ _, _⟩, _, ⟨in₂ _, _⟩ => not_false
+  | ⟨in₂ _, _⟩, _, ⟨in₀ _, _⟩ => not_false
 
-  -- count := (@eraseEquivFin (Fin 1 ⊕ Hα ⊕ Hβ) (in₂ Hβ.vF) (Fintype.card (erase (in₂ Hβ.vF))) _ (inl 0) (inl_ne_inr) (Equiv.trans (equivFinCardSum3 (Equiv.refl (Fin 1)) Hα.count Hβ.count) (Equiv.cast (congr_arg Fin _))))
-  -- count := equivFinCardSum3 (Equiv.refl <| Fin 1) (Hα.count) <|
-  --     (eraseEquivFin Hβ.i_ne_f
-  --       (Equiv.trans (Hβ.count) <| Equiv.cast
-  --         (congr_arg _ ((Nat.succ_pred Fintype.card_ne_zero).symm)))
-  --     ).trans <| Equiv.cast <| congr_arg Fin (by simp; rfl)trans <| Equiv.cast <| congr_arg Fin (by simp; rfl)
+  LΩf := Hα.LΩf
 
+  colouring
+  | ⟨in₀ _, _⟩ => trivial
+  | ⟨in₁ v, _⟩ => Hα.colouring v
+  | ⟨in₂ v, _⟩ => Hβ.colouring v
 
+  prg_succ_unique
+  | ⟨in₁ _, _⟩, p, ⟨in₁ _, _⟩ => (by simp [Hα.prg_succ_unique _ p _ .])
+  | ⟨in₂ _, _⟩, p, ⟨in₂ w, _⟩ => by have := Hβ.prg_succ_unique _ p w; aesop
+  | ⟨in₂ _, _⟩, p, ⟨in₁ _, _⟩ => by have := Hβ.prg_succ_unique _ p; aesop
+  | ⟨in₁ _, _⟩, _, ⟨in₀ _, _⟩ => False.elim
+  | ⟨in₁ _, _⟩, _, ⟨in₂ _, _⟩ => False.elim
+  | ⟨in₂ _, _⟩, _, ⟨in₀ _, _⟩ => False.elim
 
 def H_star (Hα : C2CP) : C2CP where
   V := Fin 1 ⊕ Hα
+  V_fin := FinEnum.sum
 
   E
   | inl _,  _     => False
@@ -202,8 +210,7 @@ def H_star (Hα : C2CP) : C2CP where
   vI := inr Hα.vF
   vF := inl 0
   i_ne_f := inr_ne_inl
-
-  count := equivFinCardSum (Equiv.refl <| Fin 1) Hα.count
+  LΩf := by simp only [and_self]
 
   lit_no_succ
   | inl _, _, _ => not_false
@@ -226,9 +233,9 @@ def H_star (Hα : C2CP) : C2CP where
 
   colouring := sorry -- Need indhyp here
 
-@[simp]
 def H_test (Gφ : C2CF) : C2CP where
   V := Bool ⊕ Gφ
+  V_fin := FinEnum.sum
 
   E
   | inl v, inl w => v && !w
@@ -254,8 +261,7 @@ def H_test (Gφ : C2CF) : C2CP where
   vI := inl true
   vF := inl false
   i_ne_f := Function.Injective.ne inl_injective Bool.noConfusion
-
-  count := equivFinCardSum boolEquivFin Gφ.count
+  LΩf := by simp only [and_self]
 
   lit_no_succ := by simp_all [Gφ.lit_no_succ]
 
@@ -277,7 +283,7 @@ mutual
   def ToC2CP : Program → C2CP
   | .atom n    => H_A n
   | .comp α β  => H_comp  (ToC2CP α) (ToC2CP β)
-  | .union α β => sorry -- H_union (ToC2CP α) (ToC2CP β)
+  | .union α β => H_union (ToC2CP α) (ToC2CP β)
   | .star α    => H_star  (ToC2CP α)
   | .test φ    => H_test  (ToC2CF φ)
 
@@ -289,6 +295,3 @@ mutual
   | .dim α φ => G_dim (ToC2CP α) (ToC2CF φ)
   | .box α φ => G_box (ToC2CP α) (ToC2CF φ)
 end
--- termination_by
---   ToC2CP π => sizeOf π
---   ToC2CF φ => sizeOf φ

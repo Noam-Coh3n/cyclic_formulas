@@ -66,8 +66,7 @@ namespace Sum3
     equivFinCardSum fa <| equivFinCardSum fb fc
 end Sum3
 
-def boolEquivFin : Bool ≃ Fin 2 :=
-  (FinEnum.ofList [true, false] (by simp)).2
+instance FinEnumBool : FinEnum Bool := FinEnum.ofList [true, false] (by simp)
 
 @[simp]
 instance instUnionRelation {α β : Type _}: Union (α → β → Prop) where

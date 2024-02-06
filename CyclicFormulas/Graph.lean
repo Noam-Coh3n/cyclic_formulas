@@ -5,8 +5,7 @@ import CyclicFormulas.sumLemmas
 @[ext]
 structure Graph where
   V : Type
-  [V_fin : Fintype V]
-  count : V ≃ Fin (Fintype.card V)
+  [V_fin : FinEnum V]
 
   E : V → V → Prop
   [E_dec : DecidableRel E]
@@ -18,11 +17,11 @@ namespace Graph
 section instances
   variable {G : Graph} {u v w : G}
 
-  instance instFintypeGraph : Fintype G              := G.V_fin
+  instance instFinEnumGraph : FinEnum G              := G.V_fin
   instance instDecRelAdj    : DecidableRel G.E       := G.E_dec
   instance instDecPredAdj   : DecidablePred <| G.E v := G.E_dec v
   instance instDecAdj       : Decidable <| G.E v w   := G.E_dec ..
-  instance instDecEqGraph   : DecidableEq G.V        := Equiv.decidableEq G.count
+  instance instDecEqGraph   : DecidableEq G.V        := G.V_fin.decEq
 end instances
 
 section Sum
@@ -32,7 +31,6 @@ section Sum
   protected def Sum (G₁ G₂ : Graph) : Graph where
     V := G₁.V ⊕ G₂.V
     E := LiftRel G₁.E G₂.E
-    count := equivFinCardSum G₁.count G₂.count
 
   infixl:80 " ⊎ " => Graph.Sum
 
