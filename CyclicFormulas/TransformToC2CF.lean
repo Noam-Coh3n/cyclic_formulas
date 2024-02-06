@@ -9,7 +9,6 @@ import Mathlib.Logic.Unique
 -- set_option pp.beta true
 -- set_option pp.coercions false
 
--- set_option maxHeartbeats 0
 
 open Sum
 open C2CP
@@ -92,7 +91,55 @@ def G_or (Gφ Gψ : C2CF) : C2CF where
 
 def G_and (Gφ Gψ : C2CF) : C2CF := .dual (G_or (.dual Gφ) (.dual Gψ))
 
-def G_dim (Hα : C2CP) (Gφ : C2CF) : C2CF := sorry
+def G_dim (Hα : C2CP) (Gφ : C2CF) : C2CF where
+  V := {v : Hα ⊕ Gφ // v ≠ inl Hα.vF}
+  V_fin := FinEnum.Subtype.finEnum (. ≠ inl Hα.vF)
+
+  E
+  | ⟨inr v, _⟩, ⟨inr w, _⟩ => Gφ.E v w
+  | ⟨inl v, _⟩, ⟨inl w, _⟩ => Hα.E v w
+  | ⟨inl v, _⟩, ⟨inr w, _⟩ => Hα.E v Hα.vF ∧ w = Gφ.vI
+  | ⟨inr _, _⟩, ⟨inl _, _⟩ => False
+
+  E_dec
+  | ⟨inr _, _⟩, ⟨inr _, _⟩ => Gφ.E_dec ..
+  | ⟨inl _, _⟩, ⟨inl _, _⟩ => Hα.E_dec ..
+  | ⟨inl _, _⟩, ⟨inr _, _⟩ => And.decidable
+  | ⟨inr _, _⟩, ⟨inl _, _⟩ => decidableFalse
+
+  L
+  | ⟨inr v, _⟩ => Gφ.L v
+  | ⟨inl v, _⟩ => Hα.L v
+
+  Ω
+  | ⟨inr v, _⟩ => Gφ.Ω v
+  | ⟨inl v, _⟩ => Hα.Ω v
+
+  vI := ⟨inl Hα.vI, Function.Injective.ne inl_injective Hα.i_ne_f⟩
+
+  succ
+  | ⟨inr v, _⟩ => (⟨inr ., inr_ne_inl⟩) <$> Gφ.succ v
+  | ⟨inl v, _⟩ => match Hα.succ v with
+    | none => none
+    | some w => dite (w ≠ Hα.vF)
+      (some ⟨inl w, by simp [.]⟩)
+      (fun _ => some ⟨inr Gφ.vI, inr_ne_inl⟩)
+
+  lit_no_succ
+  | ⟨inr _, _⟩, p, ⟨inr _, _⟩ => Gφ.lit_no_succ _ p _
+  | ⟨inl _, _⟩, p, ⟨inl _, _⟩ => Hα.lit_no_succ _ p _
+  | ⟨inl _, _⟩, p, ⟨inr _, _⟩ => not_and_of_not_left _ (Hα.lit_no_succ _ p _)
+  | ⟨inr _, _⟩, _, ⟨inl _, _⟩ => not_false
+
+  colouring
+  | ⟨inr v, _⟩ => Gφ.colouring v
+  | ⟨inl v, _⟩ => Hα.colouring v
+
+  prg_succ_unique
+  | ⟨inr _, _⟩, p, ⟨inr _, _⟩ => (by simp [Gφ.prg_succ_unique _ p _ .])
+  | ⟨inl _, _⟩, p, ⟨inl w, _⟩ => have := Hα.prg_succ_unique _ p w; by aesop
+  | ⟨inl _, _⟩, p, ⟨inr _, _⟩ => have := Hα.prg_succ_unique _ p; by aesop
+  | ⟨inr _, _⟩, _, ⟨inl _, _⟩ => False.elim
 
 def G_box (Hα : C2CP) (Gφ : C2CF) : C2CF := .dual (G_dim Hα (.dual Gφ))
 
@@ -111,9 +158,12 @@ def H_A (n : Nat) : C2CP where
   lit_no_succ := by simp
   prg_succ_unique := by simp
 
-
-
-def H_comp (Hα Hβ : C2CP) : C2CP := sorry
+def H_comp (Hα Hβ : C2CP) : C2CP := ⟨
+  G_dim Hα Hβ.toC2CF,
+  ⟨inr Hβ.vF, inr_ne_inl⟩,
+  by simp only [G_dim, ne_eq, Option.map_eq_map, LΩf, and_self],
+  Subtype.ne_of_val_ne inl_ne_inr
+⟩
 
 def H_union (Hα Hβ : C2CP) : C2CP where
   V := {x : Fin 1 ⊕ Hα ⊕ Hβ // x ≠ in₂ Hβ.vF}
