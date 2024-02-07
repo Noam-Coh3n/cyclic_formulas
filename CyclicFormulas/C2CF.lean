@@ -11,7 +11,7 @@ structure C2CF extends Graph where
 
   succ            : V → Option V
   lit_no_succ     : ∀ v (_ : lit (L v)) w, ¬ E v w
-  colouring       : ∀ v, col_admissible (L v) (Ω v)
+  -- colouring       : ∀ v, col_admissible (L v) (Ω v)
   prg_succ_unique : ∀ v (_ : prg <| L v) w, E v w → succ v = some w
   -- cycles_mono     : ∀ v (C : toGraph.Walk v v), mono Ω C.support
 
@@ -19,6 +19,8 @@ structure C2CP extends C2CF where
   vF     : V
   LΩf    : L vF = .prop 0 ∧ Ω vF = .o
   i_ne_f : vI ≠ vF
+
+  between : V → Bool := fun _ => true
 
 attribute [simp] C2CP.LΩf
 

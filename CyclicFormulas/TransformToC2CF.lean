@@ -16,7 +16,7 @@ def G_p (n : Nat) : C2CF where
   lit_no_succ _ _ _       := not_false
   succ _                  := none
   prg_succ_unique _ _ _   := False.elim
-  colouring               := (forall_const _).mpr trivial
+  -- colouring               := (forall_const _).mpr trivial
 
 def G_np (n : Nat) : C2CF :=
   .dual (G_p n)
@@ -76,10 +76,10 @@ def G_or (Gφ Gψ : C2CF) : C2CF where
   | in₁ _, _, in₂ _ => False.elim
   | in₂ _, _, in₁ _ => False.elim
 
-  colouring
-  | in₀ _ => trivial
-  | in₁ v => Gφ.colouring v
-  | in₂ v => Gψ.colouring v
+  -- colouring
+  -- | in₀ _ => trivial
+  -- | in₁ v => Gφ.colouring v
+  -- | in₂ v => Gψ.colouring v
 
 def G_and (Gφ Gψ : C2CF) : C2CF := .dual (G_or (.dual Gφ) (.dual Gψ))
 
@@ -123,9 +123,9 @@ def G_dim (Hα : C2CP) (Gφ : C2CF) : C2CF where
   | ⟨inl _, _⟩, p, ⟨inr _, _⟩ => not_and_of_not_left _ (Hα.lit_no_succ _ p _)
   | ⟨inr _, _⟩, _, ⟨inl _, _⟩ => not_false
 
-  colouring
-  | ⟨inr v, _⟩ => Gφ.colouring v
-  | ⟨inl v, _⟩ => Hα.colouring v
+  -- colouring
+  -- | ⟨inr v, _⟩ => Gφ.colouring v
+  -- | ⟨inl v, _⟩ => Hα.colouring v
 
   prg_succ_unique
   | ⟨inr _, _⟩, p, ⟨inr _, _⟩ => (by simp [Gφ.prg_succ_unique _ p _ .])
@@ -145,7 +145,7 @@ def H_A (n : Nat) : C2CP where
   i_ne_f := Bool.noConfusion
   LΩf := by simp only [cond_false, and_self]
 
-  colouring := by simp
+  -- colouring := by simp
   succ := (bif . then some false else none)
   lit_no_succ := by simp
   prg_succ_unique := by simp
@@ -154,7 +154,8 @@ def H_comp (Hα Hβ : C2CP) : C2CP := ⟨
   G_dim Hα Hβ.toC2CF,
   ⟨inr Hβ.vF, inr_ne_inl⟩,
   by simp only [G_dim, ne_eq, Option.map_eq_map, LΩf, and_self],
-  Subtype.ne_of_val_ne inl_ne_inr
+  Subtype.ne_of_val_ne inl_ne_inr,
+  fun _ => true
 ⟩
 
 def H_union (Hα Hβ : C2CP) : C2CP where
@@ -214,10 +215,10 @@ def H_union (Hα Hβ : C2CP) : C2CP where
 
   LΩf := Hα.LΩf
 
-  colouring
-  | ⟨in₀ _, _⟩ => trivial
-  | ⟨in₁ v, _⟩ => Hα.colouring v
-  | ⟨in₂ v, _⟩ => Hβ.colouring v
+  -- colouring
+  -- | ⟨in₀ _, _⟩ => trivial
+  -- | ⟨in₁ v, _⟩ => Hα.colouring v
+  -- | ⟨in₂ v, _⟩ => Hβ.colouring v
 
   prg_succ_unique
   | ⟨in₁ _, _⟩, p, ⟨in₁ _, _⟩ => (by simp [Hα.prg_succ_unique _ p _ .])
@@ -247,7 +248,8 @@ def H_star (Hα : C2CP) : C2CP where
 
   Ω
   | inl _ => .o
-  | inr v => if Hα.connect v Hα.vF then .μ else Hα.Ω v
+  | inr v => bif Hα.between v then .μ else Hα.Ω v
+  -- | inr v => if Hα.connect v Hα.vF then .μ else Hα.Ω v
 
   vI := inr Hα.vF
   vF := inl 0
@@ -273,7 +275,7 @@ def H_star (Hα : C2CP) : C2CP where
     then by simp_all
     else by simp_all [Hα.prg_succ_unique v _ w]
 
-  colouring := sorry -- Need indhyp here
+  -- colouring := sorry -- Need indhyp here
 
 def H_test (Gφ : C2CF) : C2CP where
   V := Bool ⊕ Gφ
@@ -304,6 +306,9 @@ def H_test (Gφ : C2CF) : C2CP where
   vF := inl false
   i_ne_f := Function.Injective.ne inl_injective Bool.noConfusion
   LΩf := by simp only [and_self]
+  between
+  | inl false => false
+  | _         => true
 
   lit_no_succ := by simp_all [Gφ.lit_no_succ]
 
@@ -316,10 +321,10 @@ def H_test (Gφ : C2CF) : C2CP where
   | inr v, p, inr w => fun a => (congr_arg _ (Gφ.prg_succ_unique v p w a)).trans Option.map_coe
   | inr _, _, inl _ => False.elim
 
-  colouring
-  | .inl true => trivial
-  | .inl false => trivial
-  | .inr v => Gφ.colouring v
+  -- colouring
+  -- | .inl true => trivial
+  -- | .inl false => trivial
+  -- | .inr v => Gφ.colouring v
 
 mutual
   def ToC2CP : Program → C2CP
@@ -337,3 +342,13 @@ mutual
   | .dim α φ => G_dim (ToC2CP α) (ToC2CF φ)
   | .box α φ => G_box (ToC2CP α) (ToC2CF φ)
 end
+
+instance {G : C2CF} : Repr G := ⟨fun v _ => repr <| FinEnum.equiv v⟩
+instance : Repr C2CF := ⟨fun G _ => let l := FinEnum.toList G
+  s!"Vertices : {repr l}" ++ "\n" ++
+  s!"Labels   : {repr <| G.L <$> l}" ++ "\n" ++
+  s!"Colours  : {repr <| G.Ω <$> l}" ++ "\n" ++
+  s!"Adj      : {repr <| (fun (v, w) => decide (G.E v w)) <$> FinEnum.toList (G × G) }"⟩
+
+
+#eval ToC2CF (Formula.dim (Program.star (Program.star (Program.atom 1))) (Formula.prop 1))

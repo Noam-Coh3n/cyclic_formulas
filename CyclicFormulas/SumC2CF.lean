@@ -50,9 +50,9 @@ def C2CF.Sum (𝔾₁ 𝔾₂ : C2CF) : C2CF where
     | inl _, _, inr _ => False.elim ∘ not_liftRel_inl_inr
     | inr _, _, inl _ => False.elim ∘ not_liftRel_inr_inl
 
-  colouring
-  | inl v => 𝔾₁.colouring v
-  | inr v => 𝔾₂.colouring v
+  -- colouring
+  -- | inl v => 𝔾₁.colouring v
+  -- | inr v => 𝔾₂.colouring v
 
   -- cycles_mono v C := by
   --   rcases v with vl | vr

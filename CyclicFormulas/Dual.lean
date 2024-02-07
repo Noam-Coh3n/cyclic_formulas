@@ -58,10 +58,10 @@ protected def dual (𝔾 : C2CF) : C2CF where
 
   prg_succ_unique v p := 𝔾.prg_succ_unique v <| (dual_prg (𝔾.L v)).mpr p
 
-  colouring v := by
-    repeat rw [Function.comp_apply]
-    apply (dual_admissible ..).mp
-    exact 𝔾.colouring v
+  -- colouring v := by
+    -- repeat rw [Function.comp_apply]
+    -- apply (dual_admissible ..).mp
+    -- exact 𝔾.colouring v
 
   -- cycles_mono v C := (𝔾.cycles_mono v C).elim
   --   (fun h => Or.inr (congrArg Colour.dual <| h . .))

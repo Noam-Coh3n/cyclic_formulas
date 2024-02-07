@@ -8,6 +8,7 @@ inductive Label : Type
 | and      : Label
 | dim_atom : Nat → Label
 | box_atom : Nat → Label
+deriving Repr
 
 namespace Label
 
