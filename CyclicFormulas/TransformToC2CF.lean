@@ -13,9 +13,9 @@ def G_p (n : Nat) : C2CF where
   Ω _     := .o
   vI      := 0
 
-  lit_no_succ _ _ _       := not_false
+  lit_succ _ _ _       := not_false
   succ _                  := none
-  prg_succ_unique _ _ _   := False.elim
+  prg_succ _ _ _   := False.elim
   -- colouring               := (forall_const _).mpr trivial
 
 def G_np (n : Nat) : C2CF :=
@@ -57,20 +57,20 @@ def G_or (Gφ Gψ : C2CF) : C2CF where
 
   vI := inl default
 
-  lit_no_succ := by
+  lit_succ := by
     rintro (z | ⟨vl | vr⟩) p (z' | ⟨wl | wr⟩)
     <;> simp_all
-    . apply Gφ.lit_no_succ vl p
-    . apply Gψ.lit_no_succ vr p
+    . apply Gφ.lit_succ vl p
+    . apply Gψ.lit_succ vr p
 
   succ
   | in₀ _ => none
   | in₁ v => .map in₁ <| Gφ.succ v
   | in₂ v => .map in₂ <| Gψ.succ v
 
-  prg_succ_unique
-  | in₁ v, p, in₁ w => fun a => (congr_arg _ (Gφ.prg_succ_unique v p w a)).trans Option.map_coe
-  | in₂ v, p, in₂ w => fun a => (congr_arg _ (Gψ.prg_succ_unique v p w a)).trans Option.map_coe
+  prg_succ
+  | in₁ v, p, in₁ w => fun a => (congr_arg _ (Gφ.prg_succ v p w a)).trans Option.map_coe
+  | in₂ v, p, in₂ w => fun a => (congr_arg _ (Gψ.prg_succ v p w a)).trans Option.map_coe
   | in₁ _, _, in₀ _ => False.elim
   | in₂ _, _, in₀ _ => False.elim
   | in₁ _, _, in₂ _ => False.elim
@@ -117,20 +117,20 @@ def G_dim (Hα : C2CP) (Gφ : C2CF) : C2CF where
       (some ⟨inl w, by simp [.]⟩)
       (fun _ => some ⟨inr Gφ.vI, inr_ne_inl⟩)
 
-  lit_no_succ
-  | ⟨inr _, _⟩, p, ⟨inr _, _⟩ => Gφ.lit_no_succ _ p _
-  | ⟨inl _, _⟩, p, ⟨inl _, _⟩ => Hα.lit_no_succ _ p _
-  | ⟨inl _, _⟩, p, ⟨inr _, _⟩ => not_and_of_not_left _ (Hα.lit_no_succ _ p _)
+  lit_succ
+  | ⟨inr _, _⟩, p, ⟨inr _, _⟩ => Gφ.lit_succ _ p _
+  | ⟨inl _, _⟩, p, ⟨inl _, _⟩ => Hα.lit_succ _ p _
+  | ⟨inl _, _⟩, p, ⟨inr _, _⟩ => not_and_of_not_left _ (Hα.lit_succ _ p _)
   | ⟨inr _, _⟩, _, ⟨inl _, _⟩ => not_false
 
   -- colouring
   -- | ⟨inr v, _⟩ => Gφ.colouring v
   -- | ⟨inl v, _⟩ => Hα.colouring v
 
-  prg_succ_unique
-  | ⟨inr _, _⟩, p, ⟨inr _, _⟩ => (by simp [Gφ.prg_succ_unique _ p _ .])
-  | ⟨inl _, _⟩, p, ⟨inl w, _⟩ => have := Hα.prg_succ_unique _ p w; by aesop
-  | ⟨inl _, _⟩, p, ⟨inr _, _⟩ => have := Hα.prg_succ_unique _ p; by aesop
+  prg_succ
+  | ⟨inr _, _⟩, p, ⟨inr _, _⟩ => (by simp [Gφ.prg_succ _ p _ .])
+  | ⟨inl _, _⟩, p, ⟨inl w, _⟩ => have := Hα.prg_succ _ p w; by aesop
+  | ⟨inl _, _⟩, p, ⟨inr _, _⟩ => have := Hα.prg_succ _ p; by aesop
   | ⟨inr _, _⟩, _, ⟨inl _, _⟩ => False.elim
 
 def G_box (Hα : C2CP) (Gφ : C2CF) : C2CF := .dual (G_dim Hα (.dual Gφ))
@@ -147,8 +147,8 @@ def H_A (n : Nat) : C2CP where
 
   -- colouring := by simp
   succ := (bif . then some false else none)
-  lit_no_succ := by simp
-  prg_succ_unique := by simp
+  lit_succ := by simp
+  prg_succ := by simp
 
 def H_comp (Hα Hβ : C2CP) : C2CP := ⟨
   G_dim Hα Hβ.toC2CF,
@@ -205,10 +205,10 @@ def H_union (Hα Hβ : C2CP) : C2CP where
 
   i_ne_f := @Subtype.ne_of_val_ne _ _ ⟨_, _⟩ _ inl_ne_inr
 
-  lit_no_succ
-  | ⟨in₁ v, _⟩, p, ⟨in₁ w, _⟩ => Hα.lit_no_succ v p w
-  | ⟨in₂ v, _⟩, p, ⟨in₂ w, _⟩ => Hβ.lit_no_succ v p w
-  | ⟨in₂ _, _⟩, p, ⟨in₁ _, _⟩ => not_and_of_not_left _ (Hβ.lit_no_succ _ p _)
+  lit_succ
+  | ⟨in₁ v, _⟩, p, ⟨in₁ w, _⟩ => Hα.lit_succ v p w
+  | ⟨in₂ v, _⟩, p, ⟨in₂ w, _⟩ => Hβ.lit_succ v p w
+  | ⟨in₂ _, _⟩, p, ⟨in₁ _, _⟩ => not_and_of_not_left _ (Hβ.lit_succ _ p _)
   | ⟨in₁ _, _⟩, _, ⟨in₀ _, _⟩ => not_false
   | ⟨in₁ _, _⟩, _, ⟨in₂ _, _⟩ => not_false
   | ⟨in₂ _, _⟩, _, ⟨in₀ _, _⟩ => not_false
@@ -220,10 +220,10 @@ def H_union (Hα Hβ : C2CP) : C2CP where
   -- | ⟨in₁ v, _⟩ => Hα.colouring v
   -- | ⟨in₂ v, _⟩ => Hβ.colouring v
 
-  prg_succ_unique
-  | ⟨in₁ _, _⟩, p, ⟨in₁ _, _⟩ => (by simp [Hα.prg_succ_unique _ p _ .])
-  | ⟨in₂ _, _⟩, p, ⟨in₂ w, _⟩ => by have := Hβ.prg_succ_unique _ p w; aesop
-  | ⟨in₂ _, _⟩, p, ⟨in₁ _, _⟩ => by have := Hβ.prg_succ_unique _ p; aesop
+  prg_succ
+  | ⟨in₁ _, _⟩, p, ⟨in₁ _, _⟩ => (by simp [Hα.prg_succ _ p _ .])
+  | ⟨in₂ _, _⟩, p, ⟨in₂ w, _⟩ => by have := Hβ.prg_succ _ p w; aesop
+  | ⟨in₂ _, _⟩, p, ⟨in₁ _, _⟩ => by have := Hβ.prg_succ _ p; aesop
   | ⟨in₁ _, _⟩, _, ⟨in₀ _, _⟩ => False.elim
   | ⟨in₁ _, _⟩, _, ⟨in₂ _, _⟩ => False.elim
   | ⟨in₂ _, _⟩, _, ⟨in₀ _, _⟩ => False.elim
@@ -256,24 +256,24 @@ def H_star (Hα : C2CP) : C2CP where
   i_ne_f := inr_ne_inl
   LΩf := by simp only [and_self]
 
-  lit_no_succ
+  lit_succ
   | inl _, _, _ => not_false
   | inr v, p, w => by
     by_contra a
     cases w
     . simp_all only [Label.lit, ite_true]
     . simp at a
-      apply @by_cases (v = Hα.vF) <;> intros <;> simp_all [Hα.lit_no_succ]
+      apply @by_cases (v = Hα.vF) <;> intros <;> simp_all [Hα.lit_succ]
 
   succ
   | inl _ => none
   | inr v => inr <$> Hα.succ v
 
-  prg_succ_unique
+  prg_succ
   | inr v, p, inl w => by intro; simp_all only [Label.prg, ite_true]
   | inr v, p, inr w => if v_eq_f : v = Hα.vF
     then by simp_all
-    else by simp_all [Hα.prg_succ_unique v _ w]
+    else by simp_all [Hα.prg_succ v _ w]
 
   -- colouring := sorry -- Need indhyp here
 
@@ -306,19 +306,20 @@ def H_test (Gφ : C2CF) : C2CP where
   vF := inl false
   i_ne_f := Function.Injective.ne inl_injective Bool.noConfusion
   LΩf := by simp only [and_self]
+
   between
   | inl false => false
   | _         => true
 
-  lit_no_succ := by simp_all [Gφ.lit_no_succ]
+  lit_succ := by simp_all [Gφ.lit_succ]
 
   succ
   | inl true  => some <|.inl false
   | inl false => none
   | inr v     => inr <$> Gφ.succ v
 
-  prg_succ_unique
-  | inr v, p, inr w => fun a => (congr_arg _ (Gφ.prg_succ_unique v p w a)).trans Option.map_coe
+  prg_succ
+  | inr v, p, inr w => fun a => (congr_arg _ (Gφ.prg_succ v p w a)).trans Option.map_coe
   | inr _, _, inl _ => False.elim
 
   -- colouring
@@ -343,12 +344,12 @@ mutual
   | .box α φ => G_box (ToC2CP α) (ToC2CF φ)
 end
 
-instance {G : C2CF} : Repr G := ⟨fun v _ => repr <| FinEnum.equiv v⟩
-instance : Repr C2CF := ⟨fun G _ => let l := FinEnum.toList G
-  s!"Vertices : {repr l}" ++ "\n" ++
-  s!"Labels   : {repr <| G.L <$> l}" ++ "\n" ++
-  s!"Colours  : {repr <| G.Ω <$> l}" ++ "\n" ++
-  s!"Adj      : {repr <| (fun (v, w) => decide (G.E v w)) <$> FinEnum.toList (G × G) }"⟩
+instance {G : C2CF} : ToString G := ⟨toString ∘ FinEnum.equiv⟩
+-- instance : Repr C2CF := ⟨fun G _ => let l := FinEnum.toList G
+--   s!"Vertices : {repr l}" ++ "\n" ++
+--   s!"Labels   : {repr <| G.L <$> l}" ++ "\n" ++
+--   s!"Colours  : {repr <| G.Ω <$> l}" ++ "\n" ++
+--   s!"Adj      : {repr <| (fun (v, w) => decide (G.E v w)) <$> FinEnum.toList (G × G) }"⟩
 
 
-#eval ToC2CF (Formula.dim (Program.star (Program.star (Program.atom 1))) (Formula.prop 1))
+-- #eval ToC2CF (Formula.dim (Program.star (Program.star (Program.atom 1))) (Formula.prop 1))

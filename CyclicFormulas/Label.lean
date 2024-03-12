@@ -8,7 +8,15 @@ inductive Label : Type
 | and      : Label
 | dim_atom : Nat → Label
 | box_atom : Nat → Label
-deriving Repr
+
+instance : ToString Label where
+  toString
+  | .prop n  => s!"p{n}"
+  | .nprop n => s!"¬p{n}"
+  | .or  => "∨"
+  | .and => "∧"
+  | .dim_atom n => s!"⟨A{n}⟩"
+  | .box_atom n => s!"[A{n}]"
 
 namespace Label
 

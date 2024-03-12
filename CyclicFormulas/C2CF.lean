@@ -9,10 +9,11 @@ structure C2CF extends Graph where
 
   vI : V
 
-  succ            : V → Option V
-  lit_no_succ     : ∀ v (_ : lit (L v)) w, ¬ E v w
+  succ     : V → Option V
+  lit_succ : ∀ v (_ : lit (L v)) w, ¬ E v w
+  prg_succ : ∀ v (_ : prg <| L v) w, E v w → succ v = some w
+  -- or_succ  : ∀ v w, L v = .or ∧ Ω v = ν ∧ E v w ∧
   -- colouring       : ∀ v, col_admissible (L v) (Ω v)
-  prg_succ_unique : ∀ v (_ : prg <| L v) w, E v w → succ v = some w
   -- cycles_mono     : ∀ v (C : toGraph.Walk v v), mono Ω C.support
 
 structure C2CP extends C2CF where
@@ -45,7 +46,7 @@ lemma final_lit {H : C2CP} : lit <| H.L H.vF := of_eq_true (congr_arg _ H.LΩf.1
 
 @[simp]
 lemma final_no_succ {H : C2CP} : ∀ x, ¬ H.E H.vF x :=
-  H.lit_no_succ H.vF final_lit
+  H.lit_succ H.vF final_lit
 
 end C2CP
 

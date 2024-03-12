@@ -52,11 +52,11 @@ protected def dual (𝔾 : C2CF) : C2CF where
   Ω       := .dual ∘ 𝔾.Ω
   vI      := 𝔾.vI
 
-  lit_no_succ v := 𝔾.lit_no_succ v ∘ (dual_lit (𝔾.L v)).mpr
+  lit_succ v := 𝔾.lit_succ v ∘ (dual_lit (𝔾.L v)).mpr
 
   succ v := 𝔾.succ v
 
-  prg_succ_unique v p := 𝔾.prg_succ_unique v <| (dual_prg (𝔾.L v)).mpr p
+  prg_succ v p := 𝔾.prg_succ v <| (dual_prg (𝔾.L v)).mpr p
 
   -- colouring v := by
     -- repeat rw [Function.comp_apply]

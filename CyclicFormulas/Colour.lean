@@ -7,12 +7,18 @@ inductive Colour : Type
 
 namespace Colour
 
-def repr : Colour → Lean.Format
-| o => "o"
-| μ => "μ"
-| ν => "ν"
+-- def repr : Colour → Lean.Format
+-- | o => "o"
+-- | μ => "μ"
+-- | ν => "ν"
 
-instance : Repr Colour := ⟨fun v _ => repr v⟩
+-- instance : Repr Colour := ⟨fun v _ => repr v⟩
+
+instance : ToString Colour where
+  toString
+  | o => "black"
+  | μ => "magenta"
+  | ν => "navy"
 
 @[simp]
 def mono {V} (Ω : V → Colour) (s : List V) : Prop :=

@@ -12,6 +12,18 @@ instance : CoeSort Graph Type := ⟨Graph.V⟩
 
 namespace Graph
 
+variable {G : Graph}
+
+def neighborSet (v : G) : Set G := {w | G.E v w}
+
+-- structure Dart extends G × G where
+--   is_adj : G.E fst snd
+--   -- deriving DecidableEq
+
+-- Type of edges in G
+def edges (G : Graph) := Subtype (Function.uncurry G.E)
+
+
 section instances
   variable {G : Graph} {u v w : G}
 
@@ -20,7 +32,11 @@ section instances
   instance instDecPredAdj   : DecidablePred <| G.E v := G.E_dec v
   instance instDecAdj       : Decidable <| G.E v w   := G.E_dec ..
   instance instDecEqGraph   : DecidableEq G.V        := G.V_fin.decEq
+  instance instFinEnumEdges : FinEnum <| G.edges     := .Subtype.finEnum _
 end instances
+
+
+
 
 section Sum
   open Sum
@@ -40,34 +56,34 @@ section Sum
 
 end Sum
 
-section Walk
-  variable {G : Graph}
+-- section Walk
+--   variable {G : Graph}
 
-  inductive Walk {G : Graph} : G → G → Type
-  | base {u v} (h : G.E u v) : G.Walk u v
-  | cons {u w} v (h : G.E u v) : G.Walk v w →  G.Walk u w
+--   inductive Walk {G : Graph} : G → G → Type
+--   | base {u v} (h : G.E u v) : G.Walk u v
+--   | cons {u w} v (h : G.E u v) : G.Walk v w →  G.Walk u w
 
-  namespace Walk
+--   namespace Walk
 
-  @[simp]
-  def support : G.Walk u v → List G
-  | Walk.base _   => [u, v]
-  | Walk.cons _ _ p => u :: support p
+--   @[simp]
+--   def support : G.Walk u v → List G
+--   | Walk.base _   => [u, v]
+--   | Walk.cons _ _ p => u :: support p
 
-  @[simp]
-  def length : G.Walk u v → Nat :=
-    @List.length G ∘ support
+--   @[simp]
+--   def length : G.Walk u v → Nat :=
+--     @List.length G ∘ support
 
-  @[simp]
-  def supportSet (walk : G.Walk u v) : Set G :=
-    {x | x ∈ walk.support}
+--   @[simp]
+--   def supportSet (walk : G.Walk u v) : Set G :=
+--     {x | x ∈ walk.support}
 
-  theorem isWalkImpTransE : (W : G.Walk x y) → (Relation.TransGen G.E) x y
-  | .base h      => .single h
-  | .cons _ h W' => .head h <| isWalkImpTransE W'
+--   theorem isWalkImpTransE : (W : G.Walk x y) → (Relation.TransGen G.E) x y
+--   | .base h      => .single h
+--   | .cons _ h W' => .head h <| isWalkImpTransE W'
 
-  end Walk
-end Walk
+--   end Walk
+-- end Walk
 
 -- section Connectivity
   -- variable {G : Graph}

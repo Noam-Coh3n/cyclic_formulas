@@ -17,23 +17,25 @@ mutual
   | test  : Formula → Program
 end
 
+example : Formula := .prop 1
+
 open Formula Program
 
 mutual
   def Program.repr : Program → Lean.Format
-  | atom  n     => s!"A_{n}"
+  | atom  n     => s!"A{n}"
   | comp  π₁ π₂ => s!"({Program.repr π₁}) ; ({Program.repr π₂})"
   | union π₁ π₂ => s!"({Program.repr π₁}) ∪ ({Program.repr π₂})"
   | star  π     => s!"({Program.repr π})*"
   | test  φ     => s!"({Formula.repr φ})?"
 
   def Formula.repr : Formula → Lean.Format
-  | prop  n => s!"p_{n}"
-  | nprop n => s!"¬p_{n}"
-  | .or  φ ψ => s!"({Formula.repr φ} ∨ ({Formula.repr ψ})"
-  | .and φ ψ => s!"({Formula.repr φ} ∧ ({Formula.repr ψ})"
-  | dim π φ => s!"⟨{Program.repr π}⟩({Formula.repr φ})"
-  | box π φ => s!"[{Program.repr π}]({Formula.repr φ})"
+  | prop  n => s!"p{n}"
+  | nprop n => s!"¬p{n}"
+  | .or  φ ψ => s!"({Formula.repr φ}) ∨ ({Formula.repr ψ})"
+  | .and φ ψ => s!"({Formula.repr φ}) ∧ ({Formula.repr ψ})"
+  | dim π φ => s!"‹{Program.repr π}›{Formula.repr φ}"
+  | box π φ => s!"[{Program.repr π}] {Formula.repr φ}"
 end
 
 instance : Repr Program := ⟨fun π _ => repr π⟩
